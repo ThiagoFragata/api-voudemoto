@@ -7,7 +7,7 @@ const ride = new Schema({
         ref: 'User',
         required: true,
     },
-    driveId: {
+    driverId: {
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true,

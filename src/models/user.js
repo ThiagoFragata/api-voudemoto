@@ -6,6 +6,7 @@ const user = new Schema({
     gId: { type: String, required: true },
     nome: { type: String, required: true },
     email: { type: String, required: true },
+    avatar: { type: String },
     cpf: {
         type: String,
         default: function () {
@@ -17,7 +18,7 @@ const user = new Schema({
         type: { type: String },
         coordinates: [],
     },
-    socketId: String,
+    socketId: { type: String },
     dataCadastro: { type: String, default: Date.now() },
 });
 
