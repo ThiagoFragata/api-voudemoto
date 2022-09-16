@@ -2,10 +2,9 @@ const mongoose = require('mongoose');
 
 const CONNECT_DB = 'mongodb://localhost:27017/voudemoto'
 
-const uri = 'mongodb://localhost:27017,localhost:27018,localhost:27019/voudemoto?' +
-    'replicaSet=rs';
+const uri = 'mongodb+srv://development:9mBOFGkgcNrWnq5Y@voudemoto-clusterdev.yc7ofqp.mongodb.net/voudemoto?retryWrites=true&w=majority'
 
-mongoose.connect(CONNECT_DB)
+mongoose.connect(uri)
     .then(() => {
         console.log('DB is up!')
     })

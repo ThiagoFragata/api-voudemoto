@@ -1,5 +1,6 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 
 const database = require('./database')
 
@@ -7,8 +8,9 @@ const app = express()
 const http = require('http')
 
 app.use(morgan('dev'));
+app.use(cors())
 app.use(express.json());
-app.set('port', process.env.PORT || 8000);
+app.set('port', process.env.PORT || 3333);
 
 app.use('/', require('./src/routes/api.routes'))
 
