@@ -19,7 +19,7 @@ const io = require('socket.io')(server)
 app.io = io
 
 io.sockets.on('connection', (socket) => {
-    // console.log('Conectou => ', socket.id)
+    console.log('Conectou o socket => ', socket.id)
 })
 
 server.listen(app.get('port'), () => {

@@ -10,6 +10,24 @@ const Ride = require('../models/ride')
 
 const googleMaps = require('../services/googleMaps')
 
+router.get('/payment/:id', async (req, res) => {
+
+    const { id } = req.params
+
+    console.log(id)
+
+    try {
+        const payment = await Payment.findOne({ userId: id })
+        await Ride.findOneAndUpdate({ userId: id }, { status: 'F' })
+
+        const ride = await Ride.findOne({ userId: id })
+
+        res.json({ error: false, data: { payment, ride } })
+    } catch (err) {
+        res.json({ error: true, message: err.message })
+    }
+})
+
 router.post('/signup', async (req, res) => {
 
     const db = mongoose.connection
@@ -33,10 +51,10 @@ router.post('/signup', async (req, res) => {
             }).save({ session })
 
             // cadastrar metodo pagamento
-            await new Payment({
-                ...payment,
-                userId: finalUser._id
-            }).save({ session })
+            // await new Payment({
+            //     ...payment,
+            //     userId: finalUser._id
+            // }).save({ session })
 
         } else {
             // cadastrar passageiro
@@ -73,8 +91,9 @@ router.post('/check-user', async (req, res) => {
 router.put('/location/:id', async (req, res) => {
     try {
 
+        const { io } = req.app
         const { id } = req.params
-        const { coordinates } = req.body
+        const { coordinates, socketId, status } = req.body
 
         await User.findByIdAndUpdate(id, {
             location: {
@@ -82,6 +101,13 @@ router.put('/location/:id', async (req, res) => {
                 coordinates
             }
         })
+
+        if (socketId && status === 'C') {
+            io.to(socketId).emit('ride-update', {
+                coordinates
+            })
+        }
+
 
         res.json({ error: false })
     } catch (err) {
@@ -189,7 +215,7 @@ router.post('/call-ride', async (req, res) => {
         const { info, userId } = req.body
 
         //ler o dados do passageiro
-        const user = await User.findById(userId).select('_id nome gId sockeId email')
+        const user = await User.findById(userId).select('_id nome gId sockeId email avatar')
 
         const drivers = await User.aggregate([
             //todos no raio de 5km
@@ -266,7 +292,7 @@ router.post('/accept-ride', async (req, res) => {
         //dados de pagamento
 
         //dados do motorista
-        const driver = await User.findById(driverId).select('_id gId nome')
+        const driver = await User.findById(driverId).select('_id gId nome avatar')
         console.log('dados do driver => ', driver)
 
         //dados do veiculo 
@@ -289,16 +315,17 @@ router.post('/accept-ride', async (req, res) => {
         //criar pagamento
 
         //criar registro da corrida no BD
-        const ride = await new Ride({
+        await new Ride({
             id: rideId,
             userId: userId,
             driverId: driverId,
             info: info,
         }).save()
 
+
         //colocar os users em uma room
         usersSocket.map((socketId) => {
-            // io.sockets.sockets.get(socketId).join(rideId)
+            io.sockets.sockets.get(socketId).join(rideId)
         })
 
         //emitir a corrida aceita com os dados
@@ -316,6 +343,28 @@ router.post('/accept-ride', async (req, res) => {
         res.json({ error: true, message: err.message })
     }
 })
+
+router.put('/update-ride', async (req, res) => {
+    try {
+        const { rideId, status } = req.body
+
+        console.log(rideId)
+        console.log(status)
+
+        await Ride.findByIdAndUpdate(rideId, {
+            status: status,
+        })
+
+        //busca dados da corrida
+        const ride = await Ride.findById(rideId).select('status')
+
+        res.json({ error: false, status: ride })
+    } catch (error) {
+        res.json({ error: true, message: err.message })
+    }
+})
+
+
 
 
 module.exports = router
